@@ -5,46 +5,102 @@
         - apt-transport-https
         - gnupg2
       state: present
-    when: ansible_os_family == 'Debian'
 
-  - name: Add Elasticsearch apt key.
-    apt_key:
-      url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-      id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
-      state: present
-    when: ansible_os_family == 'Debian'
+  - name: Copy filebeat archive
+    copy:
+      src: archive/filebeat-{{ filebeat_version }}-linux-x86_64.tar.gz
+      dest: /tmp/filebeat-{{ filebeat_version }}-linux-x86_64.tar.gz
+      mode: 0644
+      owner: root
+      group: root
+      backup: yes
 
-  - name: Add Filebeat repository
-    apt_repository:
-      repo: 'deb https://artifacts.elastic.co/packages/{{ filebeat_version }}/apt stable main'
-      state: present
-      update_cache: true
-    when: ansible_os_family == 'Debian'
+  - name: Extract Filebeat archive
+    ansible.builtin.unarchive:
+      src: /tmp/filebeat-{{ filebeat_version }}-linux-x86_64.tar.gz
+      dest: /tmp/
+      remote_src: yes
 
-  - name: Update apt cache
-    apt:
-      update_cache: yes
-    when: ansible_os_family in ["Debian"]
+  - name: Create Filebeat configuration directory
+    file:
+      path: /etc/filebeat
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
 
-  - name: Install filebeat
-    apt:
-      name: filebeat
-      state: present
-    when: ansible_os_family == "Debian"
+  - name: Move Filebeat binary to /usr/local/bin
+    command: mv /tmp/filebeat-{{ filebeat_version }}-linux-x86_64/filebeat /usr/local/bin/filebeat
 
-  - name: Copy template config file for Debian like family
+  - name: Copy Filebeat files to /etc/filebeat
+    copy:
+      src: /tmp/filebeat-{{ filebeat_version }}-linux-x86_64/
+      dest: /etc/filebeat/
+      remote_src: yes
+      mode: '0644'
+
+  - name: Copy template config file to /etc/filebeat
     template:
-      src: templates/filebeat.yaml.j2
+      src: templates/filebeat.yml.j2
       dest: /etc/filebeat/filebeat.yml
       mode: 0644
       owner: root
       group: root
       backup: yes
-    when: ansible_os_family == "Debian"
-    notify: restart filebeat
+
+  - name: Create systemd service for Filebeat
+    copy:
+      dest: /etc/systemd/system/filebeat.service
+      content: |
+        [Unit]
+        Description=Filebeat
+        Documentation=https://www.elastic.co/beats/filebeat
+        Wants=network-online.target
+        After=network-online.target
+
+        [Service]
+        ExecStart=/usr/local/bin/filebeat -c /etc/filebeat/filebeat.yml
+        Restart=always
+        User=root
+        Group=root
+
+        [Install]
+        WantedBy=multi-user.target
+
+  - name: Reload systemd daemon
+    systemd:
+      daemon_reload: yes
 
   - name: Ensure Filebeat is started and enabled at boot.
     service:
       name: filebeat
       state: started
       enabled: true
+    notify: restart filebeat
+
+
+### Alternative way using APT
+  # - name: Add Elasticsearch apt key.
+  #   apt_key:
+  #     url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+  #     id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
+  #     state: present
+  #   when: ansible_os_family == 'Debian'
+
+  # - name: Add Filebeat repository
+  #   apt_repository:
+  #     repo: 'deb https://artifacts.elastic.co/packages/{{ filebeat_version }}/apt stable main'
+  #     state: present
+  #     update_cache: true
+  #   when: ansible_os_family == 'Debian'
+
+  # - name: Update apt cache
+  #   apt:
+  #     update_cache: yes
+  #   when: ansible_os_family in ["Debian"]
+
+  # - name: Install filebeat
+  #   apt:
+  #     name: filebeat
+  #     state: present
+  #   when: ansible_os_family == "Debian"

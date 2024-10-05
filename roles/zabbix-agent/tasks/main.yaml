@@ -28,7 +28,7 @@
   - name: Update apt cache
     apt:
       update_cache: yes
-    when: ansible_os_family in ["Debian"]
+    when: ansible_os_family in "Debian"
 
   - name: Install Zabbix agent2
     apt:
@@ -41,11 +41,11 @@
       src: templates/zabbix_agent2_conf.j2
       dest: /etc/zabbix/zabbix_agent2.conf
       mode: 0644
-      owner: root
-      group: root
+      owner: zabbix
+      group: zabbix
       backup: yes 
     when: ansible_os_family == "Debian"
-    notify: restart zabbix-agent2
+    notify: restart zabbix
 
   - name: Ensure zabbix-agent2 is started and enabled at boot.
     service:
