@@ -1,0 +1,50 @@
+---
+  - name: Ensure required dependencies are present.
+    apt:
+      name:
+        - apt-transport-https
+        - gnupg2
+      state: present
+    when: ansible_os_family == 'Debian'
+
+  - name: Add Elasticsearch apt key.
+    apt_key:
+      url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
+      state: present
+    when: ansible_os_family == 'Debian'
+
+  - name: Add Filebeat repository
+    apt_repository:
+      repo: 'deb https://artifacts.elastic.co/packages/{{ filebeat_version }}/apt stable main'
+      state: present
+      update_cache: true
+    when: ansible_os_family == 'Debian'
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+    when: ansible_os_family in ["Debian"]
+
+  - name: Install filebeat
+    apt:
+      name: filebeat
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Copy template config file for Debian like family
+    template:
+      src: templates/filebeat.yaml.j2
+      dest: /etc/filebeat/filebeat.yml
+      mode: 0644
+      owner: root
+      group: root
+      backup: yes
+    when: ansible_os_family == "Debian"
+    notify: restart filebeat
+
+  - name: Ensure Filebeat is started and enabled at boot.
+    service:
+      name: filebeat
+      state: started
+      enabled: true

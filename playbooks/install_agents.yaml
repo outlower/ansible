@@ -1,0 +1,7 @@
+---
+- name: install agents
+  hosts: hosts
+  become: true
+  roles:
+    - zabbix-agent
+    - filebeat
