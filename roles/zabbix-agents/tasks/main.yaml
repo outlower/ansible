@@ -1,0 +1,55 @@
+---
+  - name: Display the config
+    debug:
+      msg: "The hostname is {{ ansible_hostname }} and the OS is {{ ansible_distribution }} {{ ansible_distribution_major_version }}"
+  
+  - name: Copy deb package to remote server for Ubuntu
+    copy:
+      src: packages/zabbix-release_7.0-2+ubuntu22.04_all.deb
+      dest: /home/ansible
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Copy deb package to remote server for Debian
+    copy:
+      src: packages/zabbix-release_7.0-2+debian12_all.deb
+      dest: /home/ansible
+    when: ansible_distribution == "Debian"
+
+  - name: Install deb package for Ubuntu
+    apt:
+      deb: /home/ansible/zabbix-release_7.0-2+ubuntu22.04_all.deb
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install deb package for Debian
+    apt:
+      deb: /home/ansible/zabbix-release_7.0-2+debian12_all.deb
+    when: ansible_distribution == "Debian"
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+    when: ansible_os_family in ["Debian"]
+
+  - name: Install Zabbix agent2
+    apt:
+      name: zabbix-agent2
+      state: present
+    when: ansible_os_family == "Debian"
+    
+  - name: Copy template config file for Debian like family
+    template:
+      src: templates/zabbix_agent2_conf.j2
+      dest: /etc/zabbix/zabbix_agent2.conf
+      mode: 0644
+      owner: root
+      group: root
+      backup: yes 
+    when: ansible_os_family == "Debian"
+    notify: restart zabbix-agent2
+
+  - name: Ensure zabbix-agent2 is started and enabled at boot.
+    service:
+      name: zabbix-agent2
+      state: started
+      enabled: true
+    when: ansible_os_family == "Debian"
