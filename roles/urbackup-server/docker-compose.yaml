@@ -1,0 +1,15 @@
+version: '3.5'
+
+services:
+  urbackup:
+    image: uroni/urbackup-server:2.5.x
+    restart: always
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - TZ=Asia/Almaty
+      - BROADCAST_INTERFACES="eth0" # use your network interface 
+    volumes:
+      - /mnt/urbackup/databases:/var/urbackup
+      - /mnt/urbackup/:/backups
+    network_mode: "host"

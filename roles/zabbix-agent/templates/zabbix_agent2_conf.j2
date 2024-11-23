@@ -77,7 +77,7 @@ LogFileSize=0
 # Default:
 # Server=
 
-Server={{ zabbix_server_host }}
+#Server={{ zabbix_server_host }}
 
 ### Option: ListenPort
 #       Agent will listen on this port for connections from the server.
@@ -159,7 +159,7 @@ Hostname={{ ansible_hostname }}
 # Mandatory: no
 # Range: 0-2034 bytes
 # Default:
-# HostMetadata=
+HostMetadata=Linux servers
 
 ### Option: HostMetadataItem
 #       Optional parameter that defines an item used for getting host metadata.

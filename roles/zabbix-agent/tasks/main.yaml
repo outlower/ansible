@@ -3,32 +3,32 @@
     debug:
       msg: "The hostname is {{ ansible_hostname }} and the OS is {{ ansible_distribution }} {{ ansible_distribution_major_version }}"
   
-  - name: Copy deb package to remote server for Ubuntu
-    copy:
-      src: packages/zabbix-release_7.0-2+ubuntu22.04_all.deb
-      dest: /home/ansible
-    when: ansible_distribution == "Ubuntu"
+  # - name: Copy deb package to remote server for Ubuntu
+  #   copy:
+  #     src: packages/zabbix-release_7.0-2+ubuntu22.04_all.deb
+  #     dest: /home/ansible
+  #   when: ansible_distribution == "Ubuntu"
 
-  - name: Copy deb package to remote server for Debian
-    copy:
-      src: packages/zabbix-release_7.0-2+debian12_all.deb
-      dest: /home/ansible
-    when: ansible_distribution == "Debian"
+  # - name: Copy deb package to remote server for Debian
+  #   copy:
+  #     src: packages/zabbix-release_7.0-2+debian12_all.deb
+  #     dest: /home/ansible
+  #   when: ansible_distribution == "Debian"
 
-  - name: Install deb package for Ubuntu
-    apt:
-      deb: /home/ansible/zabbix-release_7.0-2+ubuntu22.04_all.deb
-    when: ansible_distribution == "Ubuntu"
+  # - name: Install deb package for Ubuntu
+  #   apt:
+  #     deb: /home/ansible/zabbix-release_7.0-2+ubuntu22.04_all.deb
+  #   when: ansible_distribution == "Ubuntu"
 
-  - name: Install deb package for Debian
-    apt:
-      deb: /home/ansible/zabbix-release_7.0-2+debian12_all.deb
-    when: ansible_distribution == "Debian"
+  # - name: Install deb package for Debian
+  #   apt:
+  #     deb: /home/ansible/zabbix-release_7.0-2+debian12_all.deb
+  #   when: ansible_distribution == "Debian"
 
-  - name: Update apt cache
-    apt:
-      update_cache: yes
-    when: ansible_os_family in "Debian"
+  # - name: Update apt cache
+  #   apt:
+  #     update_cache: yes
+  #   when: ansible_os_family in "Debian"
 
   - name: Install Zabbix agent2
     apt:

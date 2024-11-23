@@ -1,0 +1,5 @@
+---
+- name: restart urbackupclientbackend
+  service:
+    name: urbackupclientbackend
+    state: restarted
