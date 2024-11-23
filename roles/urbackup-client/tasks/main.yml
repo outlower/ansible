@@ -1,11 +1,11 @@
 ---
-- name: Копировать файл urbackup клиента на сервер
+- name: Copy UrBackup binary file on client 
   copy:
     src: ../files/urbackup_client_linux_2.5.25.sh
     dest: /tmp/urbackup_client_linux_2.5.25.sh
     mode: '0755'
 
-- name: Установить UrBackup клиент
+- name: Install UrBackup client
   shell: |
     sh /tmp/urbackup_client_linux_2.5.25.sh <<EOF
     Y
@@ -14,12 +14,12 @@
   args:
     creates: /usr/local/urbackup/urbackupclient
 
-- name: Удалить временный файл после установки
+- name: Delete file after install
   file:
     path: /tmp/urbackup_client_linux_2.5.25.sh
     state: absent
 
-- name: Заменить RESTORE=disabled на RESTORE=server-confirms в /etc/default/urbackupclient
+- name: Replace RESTORE=disabled to RESTORE=server-confirms in /etc/default/urbackupclient
   lineinfile:
     path: /etc/default/urbackupclient
     regexp: '^RESTORE=.*'
