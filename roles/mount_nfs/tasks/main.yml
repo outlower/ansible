@@ -1,0 +1,35 @@
+---
+  - name: Ensure mount point exists
+    file:
+      path: "{{ nfs_mount_path }}"
+      state: directory
+      mode: '0755'
+
+  - name: Create systemd unit for nfs mount
+    copy:
+      dest: /etc/systemd/system/mount_nfs.service
+      content: |
+        [Install]
+        WantedBy=multi-user.target
+
+        [Unit]
+        Description=Mount NFS Share
+        After=network.target faceplate.service
+        Requires=faceplate.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/bin/mount -t nfs -o {{ nfs_options }} {{ nfs_server }}:{{ nfs_share }} {{ nfs_mount_path }}
+        ExecStop=/bin/umount {{ nfs_mount_path }}
+
+  - name: Reload systemd daemon
+    systemd:
+      daemon_reload: yes
+
+  - name: Ensure mount_nfs is started and enabled at boot.
+    service:
+      name: mount_nfs
+      state: started
+      enabled: true
+    notify: restart mount_nfs

@@ -1,0 +1,38 @@
+---
+  - name: Copy faceplate binary
+    copy:
+      src: bin/faceplate
+      dest: /DATASET/project/scada/faceplate/bin/faceplate
+      mode: 0755
+      owner: master
+      group: master
+
+  - name: Create systemd service for faceplate
+    copy:
+      dest: /etc/systemd/system/faceplate.service
+      content: |
+        [Install]
+        WantedBy=multi-user.target
+
+        [Unit]
+        Description=FACEPLATE SUPERAPP (-_-)
+        After=
+
+        [Service]
+        User=master
+        Group=master
+        WorkingDirectory=/DATASET/project/scada/faceplate/bin/
+        Type=simple
+        ExecStartPre=
+        ExecStart=/DATASET/project/scada/faceplate/bin/faceplate console
+
+  - name: Reload systemd daemon
+    systemd:
+      daemon_reload: yes
+
+  - name: Ensure faceplate is started and enabled at boot.
+    service:
+      name: faceplate
+      state: started
+      enabled: true
+    notify: restart faceplate

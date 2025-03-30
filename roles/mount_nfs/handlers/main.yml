@@ -1,0 +1,5 @@
+---
+- name: restart mount_nfs
+  service:
+    name: mount_nfs
+    state: restarted

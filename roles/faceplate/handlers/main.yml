@@ -1,0 +1,5 @@
+---
+- name: restart faceplate
+  service:
+    name: faceplate
+    state: restarted

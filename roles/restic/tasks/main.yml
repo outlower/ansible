@@ -1,0 +1,55 @@
+tasks:
+  - name: Copy restic binary to target
+    copy:
+      src: files/restic
+      dest: /usr/local/bin/restic
+      mode: '0755'
+
+  - name: Ensure backup destination exists
+    file:
+      path: "{{ restic_backup_destination }}/{{ ansible_hostname }}"
+      state: directory
+      mode: '0755'
+
+  - name: Initialize restic repository (if not initialized)
+    command: "restic init --repo {{ restic_backup_destination }}/{{ ansible_hostname }}"
+    args:
+      creates: "{{ restic_backup_destination }}/{{ ansible_hostname }}/config"
+
+  - name: Create systemd service for restic backup
+    copy:
+      dest: /etc/systemd/system/restic-backup.service
+      content: |
+        [Unit]
+        Description=Restic Backup Service
+        After=network.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/restic backup {{ restic_backup_source }} --repo {{ restic_backup_destination }}/{{ ansible_hostname }} --cleanup --keep-within {{ restic_backup_retention }}
+      mode: '0644'
+
+  - name: Create systemd timer for restic backup
+    copy:
+      dest: /etc/systemd/system/restic-backup.timer
+      content: |
+        [Unit]
+        Description=Run Restic Backup {{ restic_backup_schedule }}
+
+        [Timer]
+        OnCalendar=daily
+        Persistent=true
+
+        [Install]
+        WantedBy=timers.target
+      mode: '0644'
+
+  - name: Reload systemd daemon
+    systemd:
+      daemon_reload: yes
+
+  - name: Enable and start restic backup timer
+    systemd:
+      name: restic-backup.timer
+      enabled: yes
+      state: started
