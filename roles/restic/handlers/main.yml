@@ -1,0 +1,5 @@
+---
+- name: restart restic
+  service:
+    name: restic
+    state: restarted

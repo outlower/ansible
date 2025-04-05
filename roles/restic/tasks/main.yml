@@ -1,7 +1,7 @@
-tasks:
+---
   - name: Copy restic binary to target
     copy:
-      src: files/restic
+      src: bin/restic_0.18.0_linux_amd64
       dest: /usr/local/bin/restic
       mode: '0755'
 
@@ -15,18 +15,44 @@ tasks:
     command: "restic init --repo {{ restic_backup_destination }}/{{ ansible_hostname }}"
     args:
       creates: "{{ restic_backup_destination }}/{{ ansible_hostname }}/config"
+    environment:
+        RESTIC_PASSWORD: "{{ restic_password }}"
 
   - name: Create systemd service for restic backup
     copy:
       dest: /etc/systemd/system/restic-backup.service
       content: |
+        [Install]
+        WantedBy=multi-user.target
+
         [Unit]
         Description=Restic Backup Service
         After=network.target
 
         [Service]
         Type=oneshot
-        ExecStart=/usr/local/bin/restic backup {{ restic_backup_source }} --repo {{ restic_backup_destination }}/{{ ansible_hostname }} --cleanup --keep-within {{ restic_backup_retention }}
+        Environment=RESTIC_PASSWORD={{ restic_password }}
+        Environment=RESTIC_REPOSITORY={{ restic_backup_destination }}/{{ ansible_hostname }}
+        ExecStart=/usr/local/bin/restic backup {{ restic_backup_source }} --repo {{ restic_backup_destination }}/{{ ansible_hostname }}
+        ExecStartPost=/usr/local/bin/restic forget --repo {{ restic_backup_destination }}/{{ ansible_hostname }} --keep-within {{ restic_backup_retention }} --prune
+      mode: '0644'
+
+  - name: Create systemd service for restic backup
+    copy:
+      dest: /etc/systemd/system/restic-backup.service
+      content: |
+        [Install]
+        WantedBy=multi-user.target
+
+        [Unit]
+        Description=Restic Backup Service
+        After=network.target
+
+        [Service]
+        Type=oneshot
+        Environment=RESTIC_PASSWORD={{ restic_password }}
+        Environment=RESTIC_REPOSITORY={{ restic_backup_destination }}/{{ ansible_hostname }}
+        ExecStart=/usr/local/bin/restic backup {{ restic_backup_source }} --cleanup --keep-within {{ restic_backup_retention }}
       mode: '0644'
 
   - name: Create systemd timer for restic backup
