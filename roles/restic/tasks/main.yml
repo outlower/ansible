@@ -60,10 +60,10 @@
       dest: /etc/systemd/system/restic-backup.timer
       content: |
         [Unit]
-        Description=Run Restic Backup {{ restic_backup_schedule }}
+        Description=Run Restic Backup daily at {{ restic_backup_schedule }}
 
         [Timer]
-        OnCalendar=daily
+        OnCalendar={{ restic_backup_schedule }}
         Persistent=true
 
         [Install]
