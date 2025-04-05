@@ -70,6 +70,16 @@
         WantedBy=timers.target
       mode: '0644'
 
+  - name: Add RESTIC environment variables to /etc/environment
+    lineinfile:
+      path: /etc/environment
+      line: "{{ item }}"
+      state: present
+    with_items:
+      - "RESTIC_PASSWORD={{ restic_password }}"
+      - "RESTIC_REPOSITORY={{ restic_backup_destination }}/{{ ansible_hostname }}"
+    become: yes
+
   - name: Reload systemd daemon
     systemd:
       daemon_reload: yes
